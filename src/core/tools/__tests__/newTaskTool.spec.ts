@@ -150,7 +150,7 @@ describe("newTaskTool", () => {
 			params: {
 				mode: "ask",
 				message: "Find files",
-				todos: null,
+				todos: undefined,
 			},
 			partial: false,
 		}

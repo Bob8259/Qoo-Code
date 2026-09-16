@@ -16,6 +16,7 @@ import {
 	type Command as SlashCommand,
 	type WebviewMessage,
 	type EditQueuedMessagePayload,
+	type SteerQueuedMessagePayload,
 	TelemetryEventName,
 	RooCodeSettings,
 	ExperimentId,
@@ -3222,6 +3223,26 @@ export const webviewMessageHandler = async (
 				provider.updateQueuedMessage(id, text, images)
 			}
 
+			break
+		}
+		case "steerQueuedMessage": {
+			let id = message.text ?? ""
+			let text: string | undefined
+			let images: string[] | undefined
+			if (message.payload) {
+				const payload = message.payload as SteerQueuedMessagePayload
+				if (payload.id) {
+					id = payload.id
+				}
+				text = payload.text
+				images = payload.images
+			}
+			if (text !== undefined || images !== undefined) {
+				const resolved = await resolveIncomingImages({ text, images })
+				text = resolved.text
+				images = resolved.images
+			}
+			await provider.steerQueuedMessage(id, text, images)
 			break
 		}
 

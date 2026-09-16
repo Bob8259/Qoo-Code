@@ -447,7 +447,8 @@
 	},
 	"queuedMessages": {
 		"title": "Queued Messages",
-		"clickToEdit": "Click to edit message"
+		"clickToEdit": "Click to edit message",
+		"steer": "Steer"
 	},
 	"contextMenu": {
 		"noResults": "No results",

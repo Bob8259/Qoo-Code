@@ -1092,3 +1092,40 @@ describe("webviewMessageHandler - downloadErrorDiagnostics", () => {
 		expect(generateErrorDiagnostics).not.toHaveBeenCalled()
 	})
 })
+
+describe("webviewMessageHandler - steerQueuedMessage", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+	})
+
+	it("calls provider.steerQueuedMessage with id from message.text", async () => {
+		mockClineProvider.steerQueuedMessage = vi.fn().mockResolvedValue(undefined)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "steerQueuedMessage",
+			text: "queue-msg-123",
+		})
+
+		expect(mockClineProvider.steerQueuedMessage).toHaveBeenCalledWith("queue-msg-123", undefined, undefined)
+	})
+
+	it("calls provider.steerQueuedMessage with payload", async () => {
+		mockClineProvider.steerQueuedMessage = vi.fn().mockResolvedValue(undefined)
+
+		await webviewMessageHandler(mockClineProvider, {
+			type: "steerQueuedMessage",
+			payload: {
+				id: "queue-msg-456",
+				text: "Steered instruction",
+				images: ["image1.png"],
+			},
+		})
+
+		expect(mockClineProvider.steerQueuedMessage).toHaveBeenCalledWith(
+			"queue-msg-456",
+			"Steered instruction",
+			["image1.png", "data:image/png;base64,from-mention"],
+		)
+	})
+})
+

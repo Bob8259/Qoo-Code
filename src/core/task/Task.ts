@@ -158,6 +158,8 @@ export interface TaskOptions extends CreateTaskOptions {
 	workspacePath?: string
 	/** Initial status for the task's history item (e.g., "active" for child tasks) */
 	initialStatus?: "active" | "delegated" | "completed"
+	/** Optional message to immediately steer the task without pausing for user resume confirmation */
+	steerMessage?: { text?: string; images?: string[] }
 }
 
 export class Task extends EventEmitter<TaskEvents> implements TaskLike {
@@ -423,6 +425,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	// MessageManager for high-level message operations (lazy initialized)
 	private _messageManager?: MessageManager
 
+	private steerMessage?: { text?: string; images?: string[] }
+
 	constructor({
 		provider,
 		apiConfiguration,
@@ -442,8 +446,11 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		initialTodos,
 		workspacePath,
 		initialStatus,
+		steerMessage,
 	}: TaskOptions) {
 		super()
+
+		this.steerMessage = steerMessage
 
 		if (startTask && !task && !images && !historyItem) {
 			throw new Error("Either historyItem or task/images must be provided")
@@ -2086,13 +2093,28 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 			this.isInitialized = true
 
-			const { response, text, images } = await this.ask(askType) // Calls `postStateToWebview`.
+			let response: ClineAskResponse
+			let text: string | undefined
+			let images: string[] | undefined
+
+			if (this.steerMessage) {
+				response = "messageResponse"
+				text = this.steerMessage.text
+				images = this.steerMessage.images
+				this.steerMessage = undefined
+			} else {
+				const askResult = await this.ask(askType) // Calls `postStateToWebview`.
+				response = askResult.response
+				text = askResult.text
+				images = askResult.images
+			}
 
 			let responseText: string | undefined
 			let responseImages: string[] | undefined
 
 			if (response === "messageResponse") {
 				await this.say("user_feedback", text, images)
+				void this.checkpointSave(false, true)
 				responseText = text
 				responseImages = images
 			}

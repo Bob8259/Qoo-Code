@@ -126,6 +126,44 @@ describe("ClineProvider.delegateParentAndOpenChild()", () => {
 			])
 			expect((provider as any).pendingQueuedMessages).toEqual([])
 		})
+
+		it("steers a queued message by removing it from the queue and cancelling active task with steer message", async () => {
+			const provider = Object.create(ClineProvider.prototype) as ClineProvider
+			const messageQueueService = new MessageQueueService()
+			messageQueueService.addMessage("Keep this message")
+			const steerMsg = messageQueueService.addMessage("Steer this message", ["image.png"])!
+			messageQueueService.addMessage("Also keep this")
+
+			const activeTask = {
+				messageQueueService,
+			} as any
+			provider.getCurrentTask = vi.fn().mockReturnValue(activeTask)
+			provider.cancelTask = vi.fn().mockResolvedValue(undefined)
+
+			await provider.steerQueuedMessage(steerMsg.id)
+
+			expect(provider.cancelTask).toHaveBeenCalledWith({
+				text: "Steer this message",
+				images: ["image.png"],
+			})
+			expect(messageQueueService.messages.find((m) => m.id === steerMsg.id)).toBeUndefined()
+			expect(messageQueueService.messages).toHaveLength(2)
+		})
+
+		it("steers a message from pendingQueuedMessages and creates new task if no active task", async () => {
+			const provider = Object.create(ClineProvider.prototype) as ClineProvider
+			;(provider as any).pendingQueuedMessages = [
+				{ id: "pending-1", text: "Pending steer", images: undefined, timestamp: 1 },
+			]
+			provider.getCurrentTask = vi.fn().mockReturnValue(undefined)
+			provider.createTask = vi.fn().mockResolvedValue(undefined)
+			provider.postStateToWebviewWithoutTaskHistory = vi.fn().mockResolvedValue(undefined)
+
+			await provider.steerQueuedMessage("pending-1")
+
+			expect(provider.createTask).toHaveBeenCalledWith("Pending steer", undefined)
+			expect((provider as any).pendingQueuedMessages).toHaveLength(0)
+		})
 	})
 
 	it("transfers messages queued on the parent to the child", async () => {

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3.54.21
+
+- Add a "Steer" action to queued messages to immediately interrupt active tasks and guide the agent.
+
 ## 3.54.20
 
 - Skip checkpoint repositories for delegated subtasks to prevent unnecessary storage growth.

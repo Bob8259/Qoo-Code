@@ -13,9 +13,10 @@ interface QueuedMessagesProps {
 	queue: QueuedMessage[]
 	onRemove: (index: number) => void
 	onUpdate: (index: number, newText: string) => void
+	onSteer: (index: number, editedText?: string) => void
 }
 
-export const QueuedMessages = ({ queue, onRemove, onUpdate }: QueuedMessagesProps) => {
+export const QueuedMessages = ({ queue, onRemove, onUpdate, onSteer }: QueuedMessagesProps) => {
 	const { t } = useTranslation("chat")
 	const [editingStates, setEditingStates] = useState<Record<string, { isEditing: boolean; value: string }>>({})
 
@@ -89,7 +90,24 @@ export const QueuedMessages = ({ queue, onRemove, onUpdate }: QueuedMessagesProp
 										</div>
 									)}
 								</div>
-								<div className="flex">
+								<div className="flex items-center">
+									<Button
+										variant="ghost"
+										size="icon"
+										className="shrink-0"
+										title={t("chat:queuedMessages.steer")}
+										aria-label={t("chat:queuedMessages.steer")}
+										data-testid="steer-message-button"
+										onClick={(e) => {
+											e.stopPropagation()
+											if (editState.isEditing) {
+												onSteer(index, editState.value)
+											} else {
+												onSteer(index)
+											}
+										}}>
+										<span className="codicon codicon-play" />
+									</Button>
 									<Button
 										variant="ghost"
 										size="icon"

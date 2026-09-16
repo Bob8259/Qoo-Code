@@ -417,6 +417,7 @@ export interface UpdateTodoListPayload {
 }
 
 export type EditQueuedMessagePayload = Pick<QueuedMessage, "id" | "text" | "images">
+export type SteerQueuedMessagePayload = Pick<QueuedMessage, "id"> & Partial<Pick<QueuedMessage, "text" | "images">>
 
 export interface WebviewMessage {
 	type:
@@ -557,6 +558,7 @@ export interface WebviewMessage {
 		| "queueMessage"
 		| "removeQueuedMessage"
 		| "editQueuedMessage"
+		| "steerQueuedMessage"
 		| "dismissUpsell"
 		| "getDismissedUpsells"
 		| "openMarkdownPreview"
@@ -751,6 +753,7 @@ export type WebViewMessagePayload =
 	| InstallMarketplaceItemWithParametersPayload
 	| UpdateTodoListPayload
 	| EditQueuedMessagePayload
+	| SteerQueuedMessagePayload
 
 export interface IndexingStatus {
 	systemStatus: string

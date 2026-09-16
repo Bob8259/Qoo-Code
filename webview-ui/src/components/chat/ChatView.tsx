@@ -1903,6 +1903,20 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						})
 					}
 				}}
+				onSteer={(index, editedText) => {
+					if (messageQueue[index]) {
+						const text = editedText !== undefined ? editedText : messageQueue[index].text
+						vscode.postMessage({
+							type: "steerQueuedMessage",
+							text: messageQueue[index].id,
+							payload: {
+								id: messageQueue[index].id,
+								text,
+								images: messageQueue[index].images,
+							},
+						})
+					}
+				}}
 			/>
 			{showRetiredProviderWarning && (
 				<div className="px-[15px] py-1">

@@ -81,6 +81,7 @@ vi.mock("../QueuedMessages", () => ({
 		queue?: Array<{ id: string; text: string; images?: string[] }>
 		onRemove?: (index: number) => void
 		onUpdate?: (index: number, newText: string) => void
+		onSteer?: (index: number, editedText?: string) => void
 	}) {
 		if (!queue || queue.length === 0) {
 			return null

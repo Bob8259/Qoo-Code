@@ -461,7 +461,8 @@
 	},
 	"queuedMessages": {
 		"title": "队列消息",
-		"clickToEdit": "点击编辑消息"
+		"clickToEdit": "点击编辑消息",
+		"steer": "引导"
 	},
 	"slashCommand": {
 		"wantsToRun": "Zoo 想要运行斜杠命令",

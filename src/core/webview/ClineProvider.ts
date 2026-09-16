@@ -933,7 +933,7 @@ export class ClineProvider
 
 	public async createTaskWithHistoryItem(
 		historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task },
-		options?: { startTask?: boolean },
+		options?: { startTask?: boolean; steerMessage?: { text?: string; images?: string[] } },
 	) {
 		const isCliRuntime = process.env.ROO_CLI_RUNTIME === "1"
 		// CLI injects runtime provider settings from command flags/env at startup.
@@ -1065,6 +1065,7 @@ export class ClineProvider
 			workspacePath: historyItem.workspace,
 			onCreated: this.taskCreationCallback,
 			startTask: options?.startTask ?? true,
+			steerMessage: options?.steerMessage,
 			// Preserve the status from the history item to avoid overwriting it when the task saves messages
 			initialStatus: historyItem.status,
 		})
@@ -1085,6 +1086,7 @@ export class ClineProvider
 
 			// Replace the task in the stack
 			this.clineStack[stackIndex] = task
+			completeQueuedMessageTransition(this, task)
 			task.emit(RooCodeEventName.TaskFocused)
 
 			// Perform preparation tasks and set up event listeners
@@ -2922,6 +2924,50 @@ export class ClineProvider
 		}
 	}
 
+	public async steerQueuedMessage(id: string, textOverride?: string, imagesOverride?: string[]): Promise<void> {
+		const task = this.getCurrentTask()
+
+		let steerMessage: { text?: string; images?: string[] } | undefined
+		if (task) {
+			const index = task.messageQueueService.messages.findIndex((m) => m.id === id)
+			if (index !== -1) {
+				const found = task.messageQueueService.messages[index]
+				steerMessage = {
+					text: textOverride !== undefined ? textOverride : found.text,
+					images: imagesOverride !== undefined ? imagesOverride : found.images,
+				}
+				task.messageQueueService.removeMessage(id)
+			}
+		}
+
+		if (!steerMessage) {
+			const index = this.pendingQueuedMessages.findIndex((m) => m.id === id)
+			if (index !== -1) {
+				const found = this.pendingQueuedMessages[index]
+				steerMessage = {
+					text: textOverride !== undefined ? textOverride : found.text,
+					images: imagesOverride !== undefined ? imagesOverride : found.images,
+				}
+				this.pendingQueuedMessages.splice(index, 1)
+				void this.postStateToWebviewWithoutTaskHistory()
+			}
+		}
+
+		if (!steerMessage) {
+			if (textOverride || imagesOverride?.length) {
+				steerMessage = { text: textOverride, images: imagesOverride }
+			} else {
+				return
+			}
+		}
+
+		if (task) {
+			await this.cancelTask(steerMessage)
+		} else {
+			await this.createTask(steerMessage.text, steerMessage.images)
+		}
+	}
+
 	public getRecentTasks(): string[] {
 		if (this.recentTasksCache) {
 			return this.recentTasksCache
@@ -3066,7 +3112,7 @@ export class ClineProvider
 		return task
 	}
 
-	public async cancelTask(): Promise<void> {
+	public async cancelTask(steerMessage?: { text?: string; images?: string[] }): Promise<void> {
 		const task = this.getCurrentTask()
 
 		if (!task) {
@@ -3099,6 +3145,9 @@ export class ClineProvider
 
 		// Capture the current instance to detect if rehydrate already occurred elsewhere
 		const originalInstanceId = task.instanceId
+
+		// Preserve queued messages before aborting task
+		beginQueuedMessageTransition(this, task)
 
 		// Immediately cancel the underlying HTTP request if one is in progress
 		// This ensures the stream fails quickly rather than waiting for network timeout
@@ -3151,7 +3200,7 @@ export class ClineProvider
 		}
 
 		// Clears task again, so we need to abortTask manually above.
-		await this.createTaskWithHistoryItem({ ...historyItem, rootTask, parentTask })
+		await this.createTaskWithHistoryItem({ ...historyItem, rootTask, parentTask }, { steerMessage })
 	}
 
 	// Clear the current task without treating it as a subtask.
