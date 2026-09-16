@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Claude Code yanıtları için maksimum çıktı token sayısı. Varsayılan 8000'dir."
 		}
 	},
+	"subtasks": {
+		"description": "new_task ile oluşturulan alt görevlerin nasıl çalışacağını ve bağlamı hangi modelin yoğunlaştıracağını yapılandırın.",
+		"profileLabel": "Alt görevler ve bağlam yoğunlaştırma için model profili",
+		"profileDescription": "Aracının new_task ile bir alt görev oluştururken ve Zoo bağlamı yoğunlaştırırken kullandığı sağlayıcı profili. Keşif alt görevleri ve özetler için daha ucuz veya hızlı bir model kullanın.",
+		"profilePlaceholder": "Bir sağlayıcı profili seçin",
+		"profileDefault": "Varsayılan (mod profili)"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "Kontrol noktası başlatma zaman aşımı (saniye)",

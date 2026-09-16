@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Nombre màxim de tokens de sortida per a les respostes de Claude Code. El valor per defecte és 8000."
 		}
 	},
+	"subtasks": {
+		"description": "Configura com s'executen les subtasques creades amb new_task i quin model condensa el context.",
+		"profileLabel": "Perfil de model per a subtasques i condensació de context",
+		"profileDescription": "Perfil de proveïdor utilitzat quan l'agent crea una subtasca amb new_task i quan Zoo condensa el context. Fes servir un model més econòmic o ràpid per a subtasques d'exploració i resums.",
+		"profilePlaceholder": "Selecciona un perfil de proveïdor",
+		"profileDefault": "Predeterminat (perfil del mode)"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "Temps d'espera per inicialitzar el punt de control (segons)",

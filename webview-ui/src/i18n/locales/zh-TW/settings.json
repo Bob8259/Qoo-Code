@@ -574,6 +574,13 @@
 			"maxTokensDescription": "Claude Code 回應的最大輸出 Token 數量。預設為 8000。"
 		}
 	},
+	"subtasks": {
+		"description": "設定透過 new_task 建立的子任務如何執行，以及用來壓縮內容脈絡的模型。",
+		"profileLabel": "子任務與內容脈絡壓縮模型設定檔",
+		"profileDescription": "代理透過 new_task 建立子任務，以及 Zoo 壓縮內容脈絡時所使用的提供者設定檔。可為探索性子任務與摘要使用更便宜或更快速的模型。",
+		"profilePlaceholder": "選取提供者設定檔",
+		"profileDefault": "預設（模式設定檔）"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "檢查點初始化逾時（秒）",

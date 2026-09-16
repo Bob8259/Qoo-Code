@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Maximaal aantal output-tokens voor Claude Code-reacties. Standaard is 8000."
 		}
 	},
+	"subtasks": {
+		"description": "Configureer hoe subtaken die via new_task worden gemaakt worden uitgevoerd en welk model de context condenseert.",
+		"profileLabel": "Modelprofiel voor subtaken en contextcondensatie",
+		"profileDescription": "Providerprofiel dat wordt gebruikt wanneer de agent via new_task een subtaak maakt en wanneer Zoo de context condenseert. Gebruik een goedkoper of sneller model voor verkennende subtaken en samenvattingen.",
+		"profilePlaceholder": "Selecteer een providerprofiel",
+		"profileDefault": "Standaard (modusprofiel)"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "Timeout voor checkpoint-initialisatie (seconden)",

@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Claude Code 응답의 최대 출력 토큰 수. 기본값은 8000입니다."
 		}
 	},
+	"subtasks": {
+		"description": "new_task로 생성된 하위 작업의 실행 방식과 컨텍스트를 압축할 모델을 구성합니다.",
+		"profileLabel": "하위 작업 및 컨텍스트 압축용 모델 프로필",
+		"profileDescription": "에이전트가 new_task로 하위 작업을 만들 때와 Zoo가 컨텍스트를 압축할 때 사용하는 제공업체 프로필입니다. 탐색 하위 작업과 요약에는 더 저렴하거나 빠른 모델을 사용하세요.",
+		"profilePlaceholder": "제공업체 프로필 선택",
+		"profileDefault": "기본값(모드 프로필)"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "체크포인트 초기화 타임아웃(초)",

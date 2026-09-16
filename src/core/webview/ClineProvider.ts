@@ -1617,6 +1617,54 @@ export class ClineProvider
 	}
 
 	/**
+	 * Resolves the configured Subtasks profile without mutating the active task or
+	 * provider state. This profile is shared by new_task delegation and context
+	 * condensation.
+	 */
+	private async resolveSubtaskApiConfiguration(): Promise<
+		{ name: string; providerSettings: ProviderSettings } | undefined
+	> {
+		const { subtaskApiConfigProfileId } = await this.getState()
+		if (!subtaskApiConfigProfileId || subtaskApiConfigProfileId === "default") {
+			return undefined
+		}
+
+		try {
+			const listApiConfig = await this.providerSettingsManager.listConfig()
+			const profile = listApiConfig.find(({ id }) => id === subtaskApiConfigProfileId)
+			if (!profile?.name) {
+				this.log(
+					`[resolveSubtaskApiConfiguration] Subtask profile id '${subtaskApiConfigProfileId}' not found; using the active task profile.`,
+				)
+				return undefined
+			}
+
+			const { name: _, ...providerSettings } = await this.providerSettingsManager.getProfile({
+				id: subtaskApiConfigProfileId,
+			})
+			if (!providerSettings.apiProvider) {
+				this.log(
+					`[resolveSubtaskApiConfiguration] Subtask profile '${profile.name}' has no provider configured; using the active task profile.`,
+				)
+				return undefined
+			}
+
+			return { name: profile.name, providerSettings }
+		} catch (error) {
+			this.log(
+				`[resolveSubtaskApiConfiguration] Failed to resolve subtask profile '${subtaskApiConfigProfileId}'; using the active task profile: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
+			)
+			return undefined
+		}
+	}
+
+	public async getSubtaskApiConfiguration(): Promise<ProviderSettings | undefined> {
+		return (await this.resolveSubtaskApiConfiguration())?.providerSettings
+	}
+
+	/**
 	 * Activate the user-configured subtask provider profile when delegating via new_task.
 	 * Returns the activated profile name, or undefined when using the default (mode-bound) profile.
 	 */
@@ -1631,21 +1679,8 @@ export class ClineProvider
 			return undefined
 		}
 
-		const listApiConfig = await this.providerSettingsManager.listConfig()
-		const profile = listApiConfig.find(({ id }) => id === subtaskApiConfigProfileId)
-
-		if (!profile?.name) {
-			this.log(
-				`[activateSubtaskProfileIfConfigured] Subtask profile id '${subtaskApiConfigProfileId}' not found; using mode-bound profile.`,
-			)
-			return undefined
-		}
-
-		const fullProfile = await this.providerSettingsManager.getProfile({ name: profile.name })
-		if (!fullProfile.apiProvider) {
-			this.log(
-				`[activateSubtaskProfileIfConfigured] Subtask profile '${profile.name}' has no provider configured; using mode-bound profile.`,
-			)
+		const resolvedProfile = await this.resolveSubtaskApiConfiguration()
+		if (!resolvedProfile) {
 			return undefined
 		}
 
@@ -1654,7 +1689,7 @@ export class ClineProvider
 			{ persistModeConfig: false, persistTaskHistory: false },
 		)
 
-		return profile.name
+		return resolvedProfile.name
 	}
 
 	async updateCustomInstructions(instructions?: string) {

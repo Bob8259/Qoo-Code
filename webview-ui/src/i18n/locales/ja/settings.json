@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Claude Codeレスポンスの最大出力トークン数。デフォルトは8000です。"
 		}
 	},
+	"subtasks": {
+		"description": "new_task で作成されるサブタスクの実行方法と、コンテキストを圧縮するモデルを設定します。",
+		"profileLabel": "サブタスクとコンテキスト圧縮用のモデルプロファイル",
+		"profileDescription": "エージェントが new_task でサブタスクを作成するとき、および Zoo がコンテキストを圧縮するときに使用するプロバイダープロファイルです。探索用サブタスクと要約には、より低コストまたは高速なモデルを使用してください。",
+		"profilePlaceholder": "プロバイダープロファイルを選択",
+		"profileDefault": "デフォルト（モードプロファイル）"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "チェックポイント初期化タイムアウト（秒）",

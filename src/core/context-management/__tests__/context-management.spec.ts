@@ -632,9 +632,44 @@ describe("Context Management", () => {
 			// Clean up
 			summarizeSpy.mockRestore()
 		})
+		it("uses the configured condensing handler without changing token accounting", async () => {
+			const mockSummary = "Summary from the configured profile"
+			const condensingApiHandler = new MockApiHandler()
+			const summarizeSpy = vi.spyOn(condenseModule, "summarizeConversation").mockResolvedValue({
+				messages,
+				summary: mockSummary,
+				cost: 0,
+			})
+			const countTokensSpy = vi.spyOn(mockApiHandler, "countTokens")
+			const modelInfo = createModelInfo(100000, 30000)
+
+			await manageContext({
+				messages,
+				totalTokens: 70001,
+				contextWindow: modelInfo.contextWindow,
+				maxTokens: modelInfo.maxTokens,
+				apiHandler: mockApiHandler,
+				condensingApiHandler,
+				autoCondenseContext: true,
+				autoCondenseContextPercent: 100,
+				systemPrompt: "System prompt",
+				taskId,
+				profileThresholds: {},
+				currentProfileId: "default",
+			})
+
+			expect(countTokensSpy).toHaveBeenCalled()
+			expect(summarizeSpy).toHaveBeenCalledWith(
+				expect.objectContaining({
+					apiHandler: condensingApiHandler,
+					isAutomaticTrigger: true,
+				}),
+			)
+
+			summarizeSpy.mockRestore()
+		})
 
 		it("should fall back to truncateConversation when autoCondenseContext is true but summarization fails", async () => {
-			// Mock the summarizeConversation function to return an error
 			const mockSummarizeResponse: condenseModule.SummarizeResponse = {
 				messages: messages, // Original messages unchanged
 				summary: "", // Empty summary

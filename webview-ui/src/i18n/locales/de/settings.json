@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Maximale Anzahl an Ausgabe-Tokens für Claude Code-Antworten. Standard ist 8000."
 		}
 	},
+	"subtasks": {
+		"description": "Konfiguriere, wie über new_task erstellte Unteraufgaben ausgeführt werden und welches Modell den Kontext verdichtet.",
+		"profileLabel": "Modellprofil für Unteraufgaben und Kontextverdichtung",
+		"profileDescription": "Anbieterprofil, das verwendet wird, wenn der Agent über new_task eine Unteraufgabe erstellt und wenn Zoo den Kontext verdichtet. Verwende ein günstigeres oder schnelleres Modell für Erkundungsunteraufgaben und Zusammenfassungen.",
+		"profilePlaceholder": "Anbieterprofil auswählen",
+		"profileDefault": "Standard (Modusprofil)"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "Timeout für Checkpoint-Initialisierung (Sekunden)",

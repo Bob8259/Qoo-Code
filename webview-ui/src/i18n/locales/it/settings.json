@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Numero massimo di token di output per le risposte di Claude Code. Il valore predefinito è 8000."
 		}
 	},
+	"subtasks": {
+		"description": "Configura come vengono eseguite le sottoattività create tramite new_task e quale modello condensa il contesto.",
+		"profileLabel": "Profilo del modello per sottoattività e condensazione del contesto",
+		"profileDescription": "Profilo del provider usato quando l'agente crea una sottoattività tramite new_task e quando Zoo condensa il contesto. Usa un modello più economico o veloce per sottoattività esplorative e riepiloghi.",
+		"profilePlaceholder": "Seleziona un profilo del provider",
+		"profileDefault": "Predefinito (profilo della modalità)"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "Timeout inizializzazione checkpoint (secondi)",

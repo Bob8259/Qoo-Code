@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Số lượng token đầu ra tối đa cho các phản hồi của Claude Code. Mặc định là 8000."
 		}
 	},
+	"subtasks": {
+		"description": "Cấu hình cách các tác vụ con được tạo qua new_task chạy và mô hình nào cô đọng ngữ cảnh.",
+		"profileLabel": "Hồ sơ mô hình cho tác vụ con và cô đọng ngữ cảnh",
+		"profileDescription": "Hồ sơ nhà cung cấp được dùng khi tác nhân tạo tác vụ con qua new_task và khi Zoo cô đọng ngữ cảnh. Hãy dùng mô hình rẻ hơn hoặc nhanh hơn cho tác vụ con khám phá và bản tóm tắt.",
+		"profilePlaceholder": "Chọn hồ sơ nhà cung cấp",
+		"profileDefault": "Mặc định (hồ sơ chế độ)"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "Thời gian chờ khởi tạo điểm kiểm tra (giây)",

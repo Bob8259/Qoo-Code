@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Maksymalna liczba tokenów wyjściowych dla odpowiedzi Claude Code. Domyślnie 8000."
 		}
 	},
+	"subtasks": {
+		"description": "Skonfiguruj sposób działania podzadań tworzonych przez new_task oraz model kondensujący kontekst.",
+		"profileLabel": "Profil modelu dla podzadań i kondensacji kontekstu",
+		"profileDescription": "Profil dostawcy używany, gdy agent tworzy podzadanie przez new_task oraz gdy Zoo kondensuje kontekst. Użyj tańszego lub szybszego modelu do podzadań eksploracyjnych i podsumowań.",
+		"profilePlaceholder": "Wybierz profil dostawcy",
+		"profileDefault": "Domyślny (profil trybu)"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "Limit czasu inicjalizacji punktu kontrolnego (sekundy)",

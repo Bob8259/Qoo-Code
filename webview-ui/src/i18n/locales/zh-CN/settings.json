@@ -568,6 +568,13 @@
 			"maxTokensDescription": "Claude Code 响应的最大输出 Token 数量。默认为 8000。"
 		}
 	},
+	"subtasks": {
+		"description": "配置通过 new_task 创建的子任务的运行方式，以及用于压缩上下文的模型。",
+		"profileLabel": "子任务和上下文压缩模型配置文件",
+		"profileDescription": "当代理通过 new_task 创建子任务以及 Zoo 压缩上下文时使用的提供商配置文件。可为探索性子任务和摘要使用更经济或更快速的模型。",
+		"profilePlaceholder": "选择提供商配置文件",
+		"profileDefault": "默认（模式配置文件）"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "存档点初始化超时时间（秒）",

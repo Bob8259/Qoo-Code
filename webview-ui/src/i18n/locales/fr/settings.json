@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Nombre maximum de jetons de sortie pour les réponses de Claude Code. La valeur par défaut est 8000."
 		}
 	},
+	"subtasks": {
+		"description": "Configure comment s’exécutent les sous-tâches créées via new_task et quel modèle condense le contexte.",
+		"profileLabel": "Profil de modèle pour les sous-tâches et la condensation du contexte",
+		"profileDescription": "Profil de fournisseur utilisé lorsque l’agent crée une sous-tâche via new_task et lorsque Zoo condense le contexte. Utilise un modèle moins coûteux ou plus rapide pour les sous-tâches d’exploration et les résumés.",
+		"profilePlaceholder": "Sélectionner un profil de fournisseur",
+		"profileDefault": "Par défaut (profil de mode)"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "Délai d'initialisation du point de contrôle (secondes)",

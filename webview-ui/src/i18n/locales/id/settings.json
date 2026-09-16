@@ -564,6 +564,13 @@
 			"maxTokensDescription": "Jumlah maksimum token output untuk respons Claude Code. Default adalah 8000."
 		}
 	},
+	"subtasks": {
+		"description": "Konfigurasikan cara subtugas yang dibuat melalui new_task berjalan dan model mana yang meringkas konteks.",
+		"profileLabel": "Profil model untuk subtugas dan peringkasan konteks",
+		"profileDescription": "Profil penyedia yang digunakan saat agen membuat subtugas melalui new_task dan saat Zoo meringkas konteks. Gunakan model yang lebih murah atau lebih cepat untuk subtugas eksplorasi dan ringkasan.",
+		"profilePlaceholder": "Pilih profil penyedia",
+		"profileDefault": "Default (profil mode)"
+	},
 	"checkpoints": {
 		"timeout": {
 			"label": "Batas waktu inisialisasi checkpoint (detik)",

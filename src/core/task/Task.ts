@@ -336,6 +336,11 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	public readonly messageQueueService: MessageQueueService
 	private messageQueueStateChangedHandler: (() => void) | undefined
 
+	// Context management
+	// Keep user messages queued until condensation has completed and the first queued
+	// message has been handed back to the task.
+	private isCondensingContext = false
+
 	// Streaming
 	isWaitingForFirstChunk = false
 	isStreaming = false
@@ -1487,6 +1492,11 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
+		if (askResponse === "messageResponse" && this.isCondensingContext) {
+			this.messageQueueService.addMessage(text ?? "", images)
+			return
+		}
+
 		// Clear any pending auto-approval timeout when user responds
 		this.cancelAutoApprovalTimeout()
 
@@ -1624,6 +1634,16 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		}
 	}
 
+	private async getCondensingApiHandler(): Promise<ApiHandler> {
+		const provider = this.providerRef.deref()
+		const getSubtaskApiConfiguration = provider?.getSubtaskApiConfiguration
+		const subtaskApiConfiguration = getSubtaskApiConfiguration
+			? await getSubtaskApiConfiguration.call(provider)
+			: undefined
+
+		return subtaskApiConfiguration ? buildApiHandler(subtaskApiConfiguration) : this.api
+	}
+
 	private async getFilesReadByRooSafely(context: string): Promise<string[] | undefined> {
 		try {
 			return await this.fileContextTracker.getFilesReadByRoo()
@@ -1634,6 +1654,16 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	public async condenseContext(): Promise<void> {
+		this.isCondensingContext = true
+
+		try {
+			await this.condenseContextInternal()
+		} finally {
+			this.processQueuedMessagesAfterCondense()
+		}
+	}
+
+	private async condenseContextInternal(): Promise<void> {
 		// CRITICAL: Flush any pending tool results before condensing
 		// to ensure tool_use/tool_result pairs are complete in history
 		await this.flushPendingToolResultsToHistory()
@@ -1646,6 +1676,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		const { mode, apiConfiguration } = state ?? {}
 
 		const { contextTokens: prevContextTokens } = this.getTokenUsage()
+		const condensingApiHandler = await this.getCondensingApiHandler()
 
 		// Build tools for condensing metadata (same tools used for normal API calls)
 		const provider = this.providerRef.deref()
@@ -1694,7 +1725,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			condenseId,
 		} = await summarizeConversation({
 			messages: this.apiConversationHistory,
-			apiHandler: this.api,
+			apiHandler: condensingApiHandler,
 			systemPrompt,
 			taskId: this.taskId,
 			isAutomaticTrigger: false,
@@ -1737,9 +1768,9 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			contextCondense,
 		)
 
-		// Manual condensation temporarily blocks user input. Resume the first queued
-		// message after the summary is persisted so the active task can continue.
-		this.processQueuedMessagesAfterCondense()
+		// Manual and automatic condensation both resume the first queued message after
+		// the summary is persisted so the active task can continue.
+		// The outer condenseContext wrapper owns this for manual condensation.
 	}
 
 	async say(
@@ -3862,6 +3893,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		})
 
 		const contextWindow = modelInfo.contextWindow
+		const condensingApiHandler = await this.getCondensingApiHandler()
 
 		// Get the current profile ID using the helper method
 		const currentProfileId = this.getCurrentProfileId(state)
@@ -3918,6 +3950,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				maxTokens,
 				contextWindow,
 				apiHandler: this.api,
+				condensingApiHandler,
 				autoCondenseContext: true,
 				autoCondenseContextPercent: FORCED_CONTEXT_REDUCTION_PERCENT,
 				systemPrompt: await this.getSystemPrompt(),
@@ -4083,6 +4116,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			// This notification must be sent here (not earlier) because the early check uses stale token count
 			// (before user message is added to history), which could incorrectly skip showing the indicator
 			if (contextManagementWillRun && autoCondenseContext) {
+				this.isCondensingContext = true
 				await this.providerRef
 					.deref()
 					?.postMessageToWebview({ type: "condenseTaskContextStarted", text: this.taskId })
@@ -4125,6 +4159,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 			// Only generate environment details when context management will actually run (skipped by user request)
 			const contextMgmtEnvironmentDetails = undefined
+			const condensingApiHandler =
+				contextManagementWillRun && autoCondenseContext ? await this.getCondensingApiHandler() : this.api
 
 			// Get files read by Roo for code folding - only when context management will run
 			const contextMgmtFilesReadByRoo =
@@ -4139,6 +4175,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					maxTokens,
 					contextWindow,
 					apiHandler: this.api,
+					condensingApiHandler,
 					autoCondenseContext,
 					autoCondenseContextPercent,
 					systemPrompt,
@@ -4205,6 +4242,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 					await this.providerRef
 						.deref()
 						?.postMessageToWebview({ type: "condenseTaskContextResponse", text: this.taskId })
+					this.processQueuedMessagesAfterCondense()
 				}
 			}
 		}
@@ -4733,21 +4771,24 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	}
 
 	/**
-	 * Sends one queued user message after manual condensation completes.
+	 * Sends one queued user message after context condensation completes.
 	 * Dequeue inside the deferred callback so a task transition can transfer
 	 * ownership of the message before this task is disposed.
 	 */
 	private processQueuedMessagesAfterCondense(): void {
 		if (this.abort || this.abandoned) {
+			this.isCondensingContext = false
 			return
 		}
 
 		setTimeout(() => {
 			if (this.abort || this.abandoned) {
+				this.isCondensingContext = false
 				return
 			}
 
 			const queued = this.messageQueueService.dequeueMessage()
+			this.isCondensingContext = false
 			if (!queued) {
 				return
 			}

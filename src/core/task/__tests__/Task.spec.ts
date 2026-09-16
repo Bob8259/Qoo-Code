@@ -15,6 +15,7 @@ import { ApiStreamChunk } from "../../../api/transform/stream"
 import { ContextProxy } from "../../config/ContextProxy"
 import { processUserContentMentions } from "../../mentions/processUserContentMentions"
 import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-search-replace"
+import * as condenseModule from "../../condense"
 
 // Mock delay before any imports that might use it
 vi.mock("delay", () => ({
@@ -1805,6 +1806,63 @@ describe("Queued message processing after condense", () => {
 		apiModelId: "claude-3-5-sonnet-20241022",
 		apiKey: "test-api-key",
 	} as any
+
+	it("queues messages received while condensation is in progress", async () => {
+		const provider = createProvider()
+		const task = new Task({
+			provider,
+			apiConfiguration: apiConfig,
+			task: "initial task",
+			startTask: false,
+		})
+
+		let finishCondensing!: () => void
+		const condensationFinished = new Promise<void>((resolve) => {
+			finishCondensing = resolve
+		})
+		vi.spyOn(task as any, "condenseContextInternal").mockImplementation(() => condensationFinished)
+		const submitSpy = vi.spyOn(task, "submitUserMessage").mockResolvedValue(undefined)
+
+		const condensePromise = task.condenseContext()
+		await Promise.resolve()
+		task.handleWebviewAskResponse("messageResponse", "sent during condensing", ["image.png"])
+
+		expect(submitSpy).not.toHaveBeenCalled()
+		expect(task.messageQueueService.messages).toMatchObject([
+			{ text: "sent during condensing", images: ["image.png"] },
+		])
+
+		finishCondensing()
+		await condensePromise
+		await new Promise<void>((resolve) => setTimeout(resolve, 0))
+
+		expect(submitSpy).toHaveBeenCalledWith("sent during condensing", ["image.png"])
+		expect(task.messageQueueService.isEmpty()).toBe(true)
+	})
+
+	it("uses the selected Subtasks profile for manual condensation", async () => {
+		const provider = createProvider()
+		provider.getSubtaskApiConfiguration = vi.fn().mockResolvedValue({
+			apiProvider: "openai",
+			openAiApiKey: "test-api-key",
+			openAiModelId: "gpt-4o-mini",
+		})
+		const task = new Task({
+			provider,
+			apiConfiguration: apiConfig,
+			task: "initial task",
+			startTask: false,
+		})
+		vi.spyOn(task as any, "getSystemPrompt").mockResolvedValue("system")
+		const summarizeSpy = vi.mocked(condenseModule.summarizeConversation)
+		summarizeSpy.mockClear()
+
+		await task.condenseContext()
+
+		const [{ apiHandler }] = summarizeSpy.mock.calls.at(-1)!
+		expect(apiHandler.getModel().id).toBe("gpt-4o-mini")
+		expect(task.apiConfiguration).toEqual(apiConfig)
+	})
 
 	it("processes queued messages after condensing completes", async () => {
 		const provider = createProvider()

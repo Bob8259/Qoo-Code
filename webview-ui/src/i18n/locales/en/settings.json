@@ -632,9 +632,9 @@
 		}
 	},
 	"subtasks": {
-		"description": "Configure how subtasks created via new_task run.",
-		"profileLabel": "Subtask model profile",
-		"profileDescription": "Provider profile used when the agent creates a subtask via new_task. Use a cheaper or faster model for exploration subtasks such as file search or structure inspection.",
+		"description": "Configure how subtasks created via new_task run and which model condenses context.",
+		"profileLabel": "Subtask and context condensing model profile",
+		"profileDescription": "Provider profile used when the agent creates a subtask via new_task and when Zoo condenses context. Use a cheaper or faster model for exploration subtasks and summarization.",
 		"profilePlaceholder": "Select a provider profile",
 		"profileDefault": "Default (mode profile)"
 	},

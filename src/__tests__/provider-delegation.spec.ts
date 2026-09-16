@@ -347,7 +347,36 @@ describe("ClineProvider.delegateParentAndOpenChild()", () => {
 	})
 })
 
+describe("ClineProvider.getSubtaskApiConfiguration()", () => {
+	it("resolves the configured profile without activating it", async () => {
+		const provider = {
+			getState: vi.fn().mockResolvedValue({ subtaskApiConfigProfileId: "profile-2" }),
+			providerSettingsManager: {
+				listConfig: vi.fn().mockResolvedValue([{ id: "profile-2", name: "fast-model" }]),
+				getProfile: vi.fn().mockResolvedValue({
+					id: "profile-2",
+					name: "fast-model",
+					apiProvider: "openai",
+					openAiModelId: "gpt-4o-mini",
+				}),
+			},
+			resolveSubtaskApiConfiguration: (ClineProvider.prototype as any).resolveSubtaskApiConfiguration,
+			log: vi.fn(),
+		} as unknown as ClineProvider
+
+		const result = await ClineProvider.prototype.getSubtaskApiConfiguration.call(provider)
+
+		expect(result).toEqual({
+			id: "profile-2",
+			apiProvider: "openai",
+			openAiModelId: "gpt-4o-mini",
+		})
+		expect(provider.providerSettingsManager.getProfile).toHaveBeenCalledWith({ id: "profile-2" })
+	})
+})
+
 describe("ClineProvider.activateSubtaskProfileIfConfigured()", () => {
+	const resolveSubtaskApiConfiguration = (ClineProvider.prototype as any).resolveSubtaskApiConfiguration
 	const originalCliRuntime = process.env.ROO_CLI_RUNTIME
 
 	beforeEach(() => {
@@ -383,6 +412,7 @@ describe("ClineProvider.activateSubtaskProfileIfConfigured()", () => {
 					.mockResolvedValue([{ id: "profile-2", name: "fast-model", apiProvider: "anthropic" }]),
 				getProfile: vi.fn().mockResolvedValue({ apiProvider: "anthropic" }),
 			},
+			resolveSubtaskApiConfiguration,
 			activateProviderProfile,
 			log: vi.fn(),
 		} as unknown as ClineProvider
@@ -403,6 +433,7 @@ describe("ClineProvider.activateSubtaskProfileIfConfigured()", () => {
 			providerSettingsManager: {
 				listConfig: vi.fn().mockResolvedValue([{ id: "profile-1", name: "default-profile" }]),
 			},
+			resolveSubtaskApiConfiguration,
 			activateProviderProfile,
 			log: vi.fn(),
 		} as unknown as ClineProvider
